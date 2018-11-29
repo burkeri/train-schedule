@@ -16,14 +16,14 @@ var config = {
     projectId: "train-schedule-16703",
     storageBucket: "train-schedule-16703.appspot.com",
     messagingSenderId: "410786936798"
-  };
-  firebase.initializeApp(config);
+};
+firebase.initializeApp(config);
 
-  // Create Firebase global vairable
-  var database = firebase.database();
+// Create Firebase global vairable
+var database = firebase.database();
 
-  // Submit button functionallity
-  $("#submit").click( function (){
+// Submit button functionallity
+$("#submit").click(function () {
 
     //prevent form from submitting
     event.preventDefault();
@@ -33,14 +33,6 @@ var config = {
     var trainDestination = $("#train-destination").val().trim();
     var trainTime = $("#train-time").val().trim();
     var trainFrequency = $("#train-frequency").val().trim();
-
-    // push form data to firebase
-    database.ref().push({
-        trainName: trainName,
-        trainDestination: trainDestination,
-        trainTime: trainTime,
-        trainFrequency: trainFrequency
-    })
 
     // calculate minutes away
     var trainTimeConverted = moment(trainTime, "HH:mm").subtract(1, "years");
@@ -52,16 +44,38 @@ var config = {
     var arrivalTime = moment().add(minutesAway, "minutes");
     var nextArrival = moment(arrivalTime).format("hh:mm");
 
-    // create new table cells and row
+    // push form data to firebase
+    database.ref().push({
+        trainName: trainName,
+        trainDestination: trainDestination,
+        trainTime: trainTime,
+        trainFrequency: trainFrequency,
+        minutesAway: minutesAway,
+        nextArrival: nextArrival
+    })
+
+});
+
+// keep database info on page
+database.ref().on("child_added", function (snapshot) {
+
     var newRow = $("<tr>").append(
-        $("<td>").text(trainName),
-        $("<td>").text(trainDestination),
-        $("<td>").text(trainFrequency),
-        $("<td>").text(nextArrival),
-        $("<td>").text(minutesAway),
+        $("<td>").text(snapshot.val().trainName),
+        $("<td>").text(snapshot.val().trainDestination),
+        $("<td>").text(snapshot.val().trainFrequency),
+        $("<td>").text(snapshot.val().nextArrival),
+        $("<td>").text(snapshot.val().minutesAway)
     );
-    
+
     // push the new row into the table
     $("tbody").append(newRow);
 
-  });
+    // handle errors
+}, function (errorObject) {
+    console.log("Errors handled: " + errorObject.code);
+});
+
+
+
+
+
